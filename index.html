@@ -16,9 +16,19 @@ body {
 font-family: 'Inter', sans-serif;
 background-color: #f9fafb;
 height: 100vh;
-width: 375px;
-margin: 0 auto;
+display: flex;
+justify-content: center;
+align-items: flex-start;
+margin: 0;
 position: relative;
+}
+#app {
+width: 375px;
+height: 100vh;
+background-color: white;
+position: relative;
+overflow: hidden;
+box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 .chat-container {
 height: calc(100vh - 180px);
@@ -84,6 +94,8 @@ transform: translateX(-50%);
 z-index: 100;
 opacity: 0;
 transition: opacity 0.3s ease-in-out;
+width: 90%;
+max-width: 340px;
 }
 .notification.show {
 opacity: 1;
@@ -91,6 +103,7 @@ opacity: 1;
 </style>
 </head>
 <body class="bg-white">
+<div id="app">
 <!-- Notification -->
 <div id="notification" class="notification bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md shadow-md">
 <span id="notificationMessage"></span>
@@ -100,7 +113,7 @@ opacity: 1;
 <div class="w-full max-w-md space-y-8">
 <div class="text-center">
 <h1 class="text-4xl font-['Pacifico'] text-primary">DarkChat</h1>
-<p class="mt-2 text-gray-600">Chat with people securely</p>
+<p class="mt-2 text-gray-600">Connect with friends securely</p>
 <p class="mt-1 text-xs text-gray-500">Owner/Developer Joem</p>
 <p class="mt-1 text-[10px] text-gray-400">Created with ❤️ by Joem</p>
 <div class="mt-4 p-4 bg-blue-50 rounded-lg text-sm">
@@ -142,7 +155,7 @@ Sign in
 <!-- Main Chat Interface -->
 <div id="chatInterface" class="h-screen flex flex-col hidden">
 <!-- Top Navigation -->
-<div class="bg-primary text-white py-4 px-4 flex justify-between items-center fixed w-full max-w-[375px] z-10">
+<div class="bg-primary text-white py-4 px-4 flex justify-between items-center fixed w-[375px] z-10">
 <div class="flex items-center space-x-3">
 <div class="relative">
 <button id="menuBtn" class="w-8 h-8 flex items-center justify-center hover:bg-primary-600 rounded-full transition-colors">
@@ -169,87 +182,87 @@ Sign in
 </div>
 <!-- Profile Modal -->
 <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-lg w-[320px] p-5">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold">Profile Settings</h3>
-      <button id="closeProfileModal" class="text-gray-500 hover:text-gray-700">
-        <i class="ri-close-line ri-lg"></i>
-      </button>
-    </div>
-    <div class="space-y-4">
-      <div class="flex flex-col items-center">
-        <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative group cursor-pointer" id="profilePicContainer">
-          <i class="ri-user-fill ri-2x text-gray-500 group-hover:opacity-50"></i>
-          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full hidden group-hover:flex items-center justify-center">
-            <i class="ri-camera-line text-white ri-lg"></i>
-          </div>
-        </div>
-        <input type="file" id="profilePicInput" class="hidden" accept="image/*">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Nickname</label>
-        <input type="text" id="nicknameInput" class="w-full px-3 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-      </div>
-    </div>
-    <div class="flex justify-end space-x-3 mt-6">
-      <button id="cancelProfileChanges" class="px-4 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 !rounded-button">Cancel</button>
-      <button id="saveProfileChanges" class="px-4 py-2 bg-primary text-white rounded-button hover:bg-primary/90 !rounded-button">Save Changes</button>
-    </div>
-  </div>
+<div class="bg-white rounded-lg w-[320px] p-5">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-semibold">Profile Settings</h3>
+<button id="closeProfileModal" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col items-center">
+<div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative group cursor-pointer" id="profilePicContainer">
+<i class="ri-user-fill ri-2x text-gray-500 group-hover:opacity-50"></i>
+<div class="absolute inset-0 bg-black bg-opacity-50 rounded-full hidden group-hover:flex items-center justify-center">
+<i class="ri-camera-line text-white ri-lg"></i>
+</div>
+</div>
+<input type="file" id="profilePicInput" class="hidden" accept="image/*">
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Nickname</label>
+<input type="text" id="nicknameInput" class="w-full px-3 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+</div>
+</div>
+<div class="flex justify-end space-x-3 mt-6">
+<button id="cancelProfileChanges" class="px-4 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 !rounded-button">Cancel</button>
+<button id="saveProfileChanges" class="px-4 py-2 bg-primary text-white rounded-button hover:bg-primary/90 !rounded-button">Save Changes</button>
+</div>
+</div>
 </div>
 <!-- Settings Modal -->
 <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-lg w-[320px] p-5">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold">Settings</h3>
-      <button id="closeSettingsModal" class="text-gray-500 hover:text-gray-700">
-        <i class="ri-close-line ri-lg"></i>
-      </button>
-    </div>
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <span class="text-gray-700">Dark Mode</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="darkModeToggle" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-        </label>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="text-gray-700">Sound Effects</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="soundToggle" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-        </label>
-      </div>
-    </div>
-  </div>
+<div class="bg-white rounded-lg w-[320px] p-5">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-semibold">Settings</h3>
+<button id="closeSettingsModal" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-gray-700">Dark Mode</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" id="darkModeToggle" class="sr-only peer">
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-gray-700">Sound Effects</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" id="soundToggle" class="sr-only peer">
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
 </div>
 <!-- Notifications Modal -->
 <div id="notificationsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-lg w-[320px] p-5">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold">Notifications</h3>
-      <button id="closeNotificationsModal" class="text-gray-500 hover:text-gray-700">
-        <i class="ri-close-line ri-lg"></i>
-      </button>
-    </div>
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <span class="text-gray-700">Message Notifications</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="messageNotifToggle" class="sr-only peer" checked>
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-        </label>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="text-gray-700">Friend Requests</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="friendRequestNotifToggle" class="sr-only peer" checked>
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-        </label>
-      </div>
-    </div>
-  </div>
+<div class="bg-white rounded-lg w-[320px] p-5">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-semibold">Notifications</h3>
+<button id="closeNotificationsModal" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-gray-700">Message Notifications</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" id="messageNotifToggle" class="sr-only peer" checked>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-gray-700">Friend Requests</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" id="friendRequestNotifToggle" class="sr-only peer" checked>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
 </div>
 </div>
 <h1 class="text-xl font-['Pacifico']">DarkChat</h1>
@@ -342,7 +355,7 @@ Sign in
 </div>
 </div>
 <!-- Bottom Tab Bar -->
-<div class="bg-white border-t border-gray-200 fixed bottom-0 w-full max-w-[375px] flex justify-center py-2">
+<div class="bg-white border-t border-gray-200 fixed bottom-0 w-[375px] flex justify-center py-2">
 <button class="flex flex-col items-center justify-center w-16 h-14 text-primary cursor-pointer">
 <div class="w-6 h-6 flex items-center justify-center">
 <i class="ri-message-3-line ri-lg"></i>
@@ -373,14 +386,6 @@ const users = [
 { username: 'emma', password: 'pass123', fullName: 'Emma Wilson' },
 { username: 'alex', password: 'pass123', fullName: 'Alex Johnson' },
 { username: 'sarah', password: 'pass123', fullName: 'Sarah Parker' },
-{ username: 'syzdark', password: 'dark', fullName: 'syzdark' },
-{ username: 'nick', password: 'nick0', fullName: 'nicko' },
-//{ username: '', password: '', fullName: '' }, // add more user if needed
-//{ username: '', password: '', fullName: '' },
-//{ username: '', password: '', fullName: '' },
-//{ username: '', password: '', fullName: '' },
-//{ username: '', password: '', fullName: '' },
-//{ username: '', password: '', fullName: '' },
 { username: 'mike', password: 'pass123', fullName: 'Mike Thompson' }
 ];
 // App data
@@ -960,87 +965,87 @@ const messageNotifToggle = document.getElementById('messageNotifToggle');
 const friendRequestNotifToggle = document.getElementById('friendRequestNotifToggle');
 // Profile Modal Functions
 profileBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  nicknameInput.value = currentUser.fullName || '';
-  profileModal.classList.remove('hidden');
-  menuDropdown.classList.add('hidden');
+e.preventDefault();
+nicknameInput.value = currentUser.fullName || '';
+profileModal.classList.remove('hidden');
+menuDropdown.classList.add('hidden');
 });
 closeProfileModal.addEventListener('click', () => {
-  profileModal.classList.add('hidden');
+profileModal.classList.add('hidden');
 });
 profilePicContainer.addEventListener('click', () => {
-  profilePicInput.click();
+profilePicInput.click();
 });
 profilePicInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      currentUser.profilePic = e.target.result;
-      saveData();
-      showNotification('Profile picture updated!');
-    };
-    reader.readAsDataURL(file);
-  }
+const file = e.target.files[0];
+if (file) {
+const reader = new FileReader();
+reader.onload = (e) => {
+currentUser.profilePic = e.target.result;
+saveData();
+showNotification('Profile picture updated!');
+};
+reader.readAsDataURL(file);
+}
 });
 saveProfileChanges.addEventListener('click', () => {
-  const newNickname = nicknameInput.value.trim();
-  if (newNickname) {
-    currentUser.fullName = newNickname;
-    saveData();
-    updateFriendsListUI();
-    showNotification('Profile updated successfully!');
-    profileModal.classList.add('hidden');
-  }
+const newNickname = nicknameInput.value.trim();
+if (newNickname) {
+currentUser.fullName = newNickname;
+saveData();
+updateFriendsListUI();
+showNotification('Profile updated successfully!');
+profileModal.classList.add('hidden');
+}
 });
 cancelProfileChanges.addEventListener('click', () => {
-  profileModal.classList.add('hidden');
+profileModal.classList.add('hidden');
 });
 // Settings Modal Functions
 settingsBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  settingsModal.classList.remove('hidden');
-  menuDropdown.classList.add('hidden');
+e.preventDefault();
+settingsModal.classList.remove('hidden');
+menuDropdown.classList.add('hidden');
 });
 closeSettingsModal.addEventListener('click', () => {
-  settingsModal.classList.add('hidden');
+settingsModal.classList.add('hidden');
 });
 darkModeToggle.addEventListener('change', () => {
-  // Implement dark mode logic here
-  showNotification('Dark mode setting saved!');
+// Implement dark mode logic here
+showNotification('Dark mode setting saved!');
 });
 soundToggle.addEventListener('change', () => {
-  // Implement sound effects logic here
-  showNotification('Sound effects setting saved!');
+// Implement sound effects logic here
+showNotification('Sound effects setting saved!');
 });
 // Notifications Modal Functions
 notificationsBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  notificationsModal.classList.remove('hidden');
-  menuDropdown.classList.add('hidden');
+e.preventDefault();
+notificationsModal.classList.remove('hidden');
+menuDropdown.classList.add('hidden');
 });
 closeNotificationsModal.addEventListener('click', () => {
-  notificationsModal.classList.add('hidden');
+notificationsModal.classList.add('hidden');
 });
 messageNotifToggle.addEventListener('change', () => {
-  // Implement message notifications logic here
-  showNotification('Message notifications setting saved!');
+// Implement message notifications logic here
+showNotification('Message notifications setting saved!');
 });
 friendRequestNotifToggle.addEventListener('change', () => {
-  // Implement friend request notifications logic here
-  showNotification('Friend request notifications setting saved!');
+// Implement friend request notifications logic here
+showNotification('Friend request notifications setting saved!');
 });
 // Close modals when clicking outside
 window.addEventListener('click', (e) => {
-  if (e.target === profileModal) {
-    profileModal.classList.add('hidden');
-  }
-  if (e.target === settingsModal) {
-    settingsModal.classList.add('hidden');
-  }
-  if (e.target === notificationsModal) {
-    notificationsModal.classList.add('hidden');
-  }
+if (e.target === profileModal) {
+profileModal.classList.add('hidden');
+}
+if (e.target === settingsModal) {
+settingsModal.classList.add('hidden');
+}
+if (e.target === notificationsModal) {
+notificationsModal.classList.add('hidden');
+}
 });
 // Menu dropdown functionality
 const menuBtn = document.getElementById('menuBtn');
@@ -1111,5 +1116,6 @@ addFriendModal.classList.add('hidden');
 }
 });
 </script>
+</div>
 </body>
 </html>
