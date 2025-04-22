@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DarkChat</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#10B981'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+background-color: #f9fafb;
+height: 100vh;
+width: 375px;
+margin: 0 auto;
+position: relative;
+}
+.chat-container {
+height: calc(100vh - 180px);
+overflow-y: auto;
+padding-bottom: 16px;
+margin-bottom: 0;
+}
+.message-bubble {
+max-width: 80%;
+word-wrap: break-word;
+white-space: pre-wrap;
+overflow-wrap: break-word;
+word-break: break-word;
+}
+.message-bubble.sent {
+background-color: #4F46E5;
+color: white;
+border-radius: 16px 16px 4px 16px;
+margin-left: auto;
+padding: 8px 12px;
+}
+.message-bubble.received {
+background-color: #f3f4f6;
+color: #1f2937;
+border-radius: 16px 16px 16px 4px;
+padding: 8px 12px;
+}
+.typing-indicator {
+display: inline-flex;
+align-items: center;
+}
+.typing-indicator span {
+height: 8px;
+width: 8px;
+background-color: #d1d5db;
+border-radius: 50%;
+display: inline-block;
+margin: 0 1px;
+animation: typing 1.4s infinite ease-in-out;
+}
+.typing-indicator span:nth-child(1) {
+animation-delay: 0s;
+}
+.typing-indicator span:nth-child(2) {
+animation-delay: 0.2s;
+}
+.typing-indicator span:nth-child(3) {
+animation-delay: 0.4s;
+}
+@keyframes typing {
+0% { transform: translateY(0); }
+50% { transform: translateY(-5px); }
+100% { transform: translateY(0); }
+}
+.hide {
+display: none;
+}
+.notification {
+position: fixed;
+top: 80px;
+left: 50%;
+transform: translateX(-50%);
+z-index: 100;
+opacity: 0;
+transition: opacity 0.3s ease-in-out;
+}
+.notification.show {
+opacity: 1;
+}
+</style>
+</head>
+<body class="bg-white">
+<!-- Notification -->
+<div id="notification" class="notification bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md shadow-md">
+<span id="notificationMessage"></span>
+</div>
+<!-- Login Screen -->
+<div id="loginScreen" class="flex flex-col items-center justify-center h-screen px-6">
+<div class="w-full max-w-md space-y-8">
+<div class="text-center">
+<h1 class="text-4xl font-['Pacifico'] text-primary">DarkChat</h1>
+<p class="mt-2 text-gray-600">Connect with friends securely</p>
+<p class="mt-1 text-xs text-gray-500">Owner/Developer Joem</p>
+<p class="mt-1 text-[10px] text-gray-400">Created with ❤️ by Joem</p>
+<div class="mt-4 p-4 bg-blue-50 rounded-lg text-sm">
+<p class="font-medium text-gray-700">Test Accounts:</p>
+<div class="mt-2 space-y-1 text-gray-600">
+<p>Username: john | Password: pass123</p>
+<p>Username: emma | Password: pass123</p>
+<p>Username: alex | Password: pass123</p>
+</div>
+<p class="mt-2 text-xs text-gray-500">Click to copy credentials</p>
+</div>
+</div>
+<form id="loginForm" class="mt-8 space-y-6">
+<div class="rounded-md shadow-sm space-y-4">
+<div>
+<label for="username" class="sr-only">Username</label>
+<input id="username" name="username" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-button focus:ring-primary focus:border-primary focus:outline-none" placeholder="Username">
+</div>
+<div>
+<label for="password" class="sr-only">Password</label>
+<input id="password" name="password" type="password" required class="w-full px-4 py-3 border border-gray-300 rounded-button focus:ring-primary focus:border-primary focus:outline-none" placeholder="Password">
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+<label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+</div>
+</div>
+<div>
+<button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary cursor-pointer !rounded-button">
+Sign in
+</button>
+</div>
+<div id="loginError" class="text-red-500 text-center text-sm hidden"></div>
+</form>
+</div>
+</div>
+<!-- Main Chat Interface -->
+<div id="chatInterface" class="h-screen flex flex-col hidden">
+<!-- Top Navigation -->
+<div class="bg-primary text-white py-4 px-4 flex justify-between items-center fixed w-full max-w-[375px] z-10">
+<div class="flex items-center space-x-3">
+<div class="relative">
+<button id="menuBtn" class="w-8 h-8 flex items-center justify-center hover:bg-primary-600 rounded-full transition-colors">
+<i class="ri-menu-line ri-lg"></i>
+</button>
+<div id="menuDropdown" class="absolute left-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden">
+<a href="#" id="profileBtn" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+<i class="ri-user-line w-5 h-5 mr-3"></i>
+<span>Profile</span>
+</a>
+<a href="#" id="settingsBtn" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+<i class="ri-settings-3-line w-5 h-5 mr-3"></i>
+<span>Settings</span>
+</a>
+<a href="#" id="notificationsBtn" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
+<i class="ri-notification-line w-5 h-5 mr-3"></i>
+<span>Notifications</span>
+</a>
+<div class="border-t border-gray-200 my-2"></div>
+<a href="#" class="flex items-center px-4 py-2 text-red-600 hover:bg-gray-100">
+<i class="ri-logout-box-line w-5 h-5 mr-3"></i>
+<span>Logout</span>
+</a>
+</div>
+<!-- Profile Modal -->
+<div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-[320px] p-5">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Profile Settings</h3>
+      <button id="closeProfileModal" class="text-gray-500 hover:text-gray-700">
+        <i class="ri-close-line ri-lg"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div class="flex flex-col items-center">
+        <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative group cursor-pointer" id="profilePicContainer">
+          <i class="ri-user-fill ri-2x text-gray-500 group-hover:opacity-50"></i>
+          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full hidden group-hover:flex items-center justify-center">
+            <i class="ri-camera-line text-white ri-lg"></i>
+          </div>
+        </div>
+        <input type="file" id="profilePicInput" class="hidden" accept="image/*">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nickname</label>
+        <input type="text" id="nicknameInput" class="w-full px-3 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+      </div>
+    </div>
+    <div class="flex justify-end space-x-3 mt-6">
+      <button id="cancelProfileChanges" class="px-4 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 !rounded-button">Cancel</button>
+      <button id="saveProfileChanges" class="px-4 py-2 bg-primary text-white rounded-button hover:bg-primary/90 !rounded-button">Save Changes</button>
+    </div>
+  </div>
+</div>
+<!-- Settings Modal -->
+<div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-[320px] p-5">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Settings</h3>
+      <button id="closeSettingsModal" class="text-gray-500 hover:text-gray-700">
+        <i class="ri-close-line ri-lg"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="text-gray-700">Dark Mode</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+        </label>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-700">Sound Effects</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="soundToggle" class="sr-only peer">
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Notifications Modal -->
+<div id="notificationsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-[320px] p-5">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Notifications</h3>
+      <button id="closeNotificationsModal" class="text-gray-500 hover:text-gray-700">
+        <i class="ri-close-line ri-lg"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="text-gray-700">Message Notifications</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="messageNotifToggle" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+        </label>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-gray-700">Friend Requests</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="friendRequestNotifToggle" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h1 class="text-xl font-['Pacifico']">DarkChat</h1>
+</div>
+<div class="flex items-center space-x-2">
+<div id="currentUserDisplay" class="text-sm font-medium"></div>
+<button id="logoutBtn" class="w-8 h-8 flex items-center justify-center cursor-pointer">
+<i class="ri-logout-box-line ri-lg"></i>
+</button>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="flex flex-col flex-1 pt-16 pb-16 h-screen">
+<!-- Chat List View -->
+<div id="chatListView" class="flex-1 px-4">
+<div class="py-4">
+<div class="relative">
+<input type="text" placeholder="Search conversations..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+<div class="absolute left-3 top-2 w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+</div>
+<!-- Friend Requests Section -->
+<div class="mb-6">
+<div class="flex justify-between items-center mb-3">
+<h2 class="text-lg font-semibold text-gray-800">Friend Requests</h2>
+<button id="addFriendBtn" class="text-primary text-sm font-medium flex items-center cursor-pointer">
+<i class="ri-user-add-line mr-1"></i> Add Friend
+</button>
+</div>
+<div id="pendingRequestsContainer" class="space-y-3">
+<!-- Pending requests will be added here dynamically -->
+<div class="text-sm text-gray-500 italic">No pending requests</div>
+</div>
+</div>
+<!-- Friends List Section -->
+<div>
+<h2 class="text-lg font-semibold text-gray-800 mb-3">Friends</h2>
+<div id="friendsListContainer" class="space-y-2">
+<!-- Friends will be added here dynamically -->
+<div class="text-sm text-gray-500 italic">No friends yet. Add some friends to start chatting!</div>
+</div>
+</div>
+</div>
+<!-- Chat Detail View (initially hidden) -->
+<div id="chatDetailView" class="flex-1 flex flex-col h-full hidden overflow-hidden">
+<!-- Chat Header -->
+<div class="px-4 py-3 border-b flex items-center">
+<button id="backToListBtn" class="mr-3 w-8 h-8 flex items-center justify-center cursor-pointer">
+<i class="ri-arrow-left-line ri-lg"></i>
+</button>
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+<i class="ri-user-fill ri-lg text-gray-500"></i>
+</div>
+<div class="ml-3">
+<h3 id="chatFriendName" class="font-medium text-gray-800"></h3>
+<div class="flex items-center text-xs text-green-500">
+<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+<span>Online</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Messages -->
+<div id="chatMessagesContainer" class="chat-container flex-1 px-4 py-3 space-y-4 overflow-y-auto">
+<!-- Messages will be added here dynamically -->
+</div>
+<!-- Typing Indicator -->
+<div id="typingIndicator" class="px-4 py-2 hidden">
+<div class="flex items-center text-sm text-gray-500">
+<span id="typingUsername"></span> is typing
+<div class="typing-indicator ml-2">
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
+</div>
+<!-- Message Input -->
+<div class="px-4 py-3 border-t">
+<div class="flex">
+<input id="messageInput" type="text" placeholder="Type a message..." class="flex-1 border border-gray-300 rounded-l-button px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+<button id="sendMessageBtn" class="bg-primary text-white px-4 py-2 rounded-r-button flex items-center justify-center cursor-pointer !rounded-button">
+<i class="ri-send-plane-fill ri-lg"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Tab Bar -->
+<div class="bg-white border-t border-gray-200 fixed bottom-0 w-full max-w-[375px] flex justify-center py-2">
+<button class="flex flex-col items-center justify-center w-16 h-14 text-primary cursor-pointer">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-message-3-line ri-lg"></i>
+</div>
+<span class="text-xs mt-1">Chats</span>
+</button>
+</div>
+</div>
+<!-- Add Friend Modal -->
+<div id="addFriendModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+<div class="bg-white rounded-lg w-[320px] p-5">
+<h3 class="text-lg font-semibold mb-4">Add Friend</h3>
+<div class="mb-4">
+<label for="friendUsername" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+<input id="friendUsername" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Enter username">
+<p id="addFriendError" class="text-red-500 text-xs mt-1 hidden"></p>
+</div>
+<div class="flex justify-end space-x-3">
+<button id="cancelAddFriend" class="px-4 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 cursor-pointer !rounded-button">Cancel</button>
+<button id="confirmAddFriend" class="px-4 py-2 bg-primary text-white rounded-button hover:bg-primary/90 cursor-pointer !rounded-button">Send Request</button>
+</div>
+</div>
+</div>
+<script>
+// Hardcoded users
+const users = [
+{ username: 'john', password: 'pass123', fullName: 'John Smith' },
+{ username: 'emma', password: 'pass123', fullName: 'Emma Wilson' },
+{ username: 'alex', password: 'pass123', fullName: 'Alex Johnson' },
+{ username: 'sarah', password: 'pass123', fullName: 'Sarah Parker' },
+{ username: 'mike', password: 'pass123', fullName: 'Mike Thompson' }
+];
+// App data
+let currentUser = null;
+let friendRequests = []; // {from: username, to: username, status: 'pending'/'accepted'/'declined'}
+let messages = []; // {from: username, to: username, text: string, timestamp: Date}
+let currentChat = null;
+let typingTimeout = null;
+// DOM Elements
+const loginScreen = document.getElementById('loginScreen');
+const chatInterface = document.getElementById('chatInterface');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const logoutBtn = document.getElementById('logoutBtn');
+const currentUserDisplay = document.getElementById('currentUserDisplay');
+const chatListView = document.getElementById('chatListView');
+const chatDetailView = document.getElementById('chatDetailView');
+const backToListBtn = document.getElementById('backToListBtn');
+const chatFriendName = document.getElementById('chatFriendName');
+const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+const messageInput = document.getElementById('messageInput');
+const sendMessageBtn = document.getElementById('sendMessageBtn');
+const pendingRequestsContainer = document.getElementById('pendingRequestsContainer');
+const friendsListContainer = document.getElementById('friendsListContainer');
+const addFriendBtn = document.getElementById('addFriendBtn');
+const addFriendModal = document.getElementById('addFriendModal');
+const friendUsername = document.getElementById('friendUsername');
+const confirmAddFriend = document.getElementById('confirmAddFriend');
+const cancelAddFriend = document.getElementById('cancelAddFriend');
+const addFriendError = document.getElementById('addFriendError');
+const typingIndicator = document.getElementById('typingIndicator');
+const typingUsername = document.getElementById('typingUsername');
+const notification = document.getElementById('notification');
+const notificationMessage = document.getElementById('notificationMessage');
+// Check local storage for saved data
+function loadSavedData() {
+const savedUser = localStorage.getItem('currentUser');
+const savedRequests = localStorage.getItem('friendRequests');
+const savedMessages = localStorage.getItem('messages');
+if (savedUser) {
+currentUser = JSON.parse(savedUser);
+}
+if (savedRequests) {
+try {
+friendRequests = JSON.parse(savedRequests);
+} catch (e) {
+friendRequests = [];
+localStorage.removeItem('friendRequests');
+}
+}
+if (savedMessages) {
+try {
+messages = JSON.parse(savedMessages);
+// Convert string timestamps back to Date objects
+messages = messages.map(msg => ({
+...msg,
+timestamp: new Date(msg.timestamp)
+}));
+} catch (e) {
+messages = [];
+localStorage.removeItem('messages');
+}
+}
+if (currentUser) {
+loginUser(currentUser, false);
+chatInterface.classList.remove('hidden');
+loginScreen.classList.add('hidden');
+currentUserDisplay.textContent = currentUser.username;
+}
+}
+// Save data to local storage
+function saveData() {
+localStorage.setItem('currentUser', JSON.stringify(currentUser));
+localStorage.setItem('friendRequests', JSON.stringify(friendRequests));
+// Save messages but convert Date objects to strings
+const messagesToSave = messages.map(msg => ({
+...msg,
+timestamp: msg.timestamp.toISOString()
+}));
+localStorage.setItem('messages', JSON.stringify(messagesToSave));
+}
+// Show notification
+function showNotification(message, isSuccess = true) {
+notificationMessage.textContent = message;
+notification.className = `notification ${isSuccess ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'} px-4 py-3 rounded-md shadow-md show`;
+setTimeout(() => {
+notification.className = 'notification';
+}, 3000);
+}
+// Login functionality
+loginForm.addEventListener('submit', function(e) {
+e.preventDefault();
+const username = document.getElementById('username').value.trim();
+const password = document.getElementById('password').value;
+const rememberMe = document.getElementById('remember-me').checked;
+const user = users.find(u => u.username === username && u.password === password);
+if (user) {
+loginUser(user, rememberMe);
+} else {
+loginError.textContent = 'Invalid username or password';
+loginError.classList.remove('hidden');
+}
+});
+function loginUser(user, rememberMe) {
+currentUser = {
+username: user.username,
+fullName: user.fullName
+};
+if (rememberMe) {
+saveData();
+}
+loginScreen.classList.add('hidden');
+chatInterface.classList.remove('hidden');
+currentUserDisplay.textContent = currentUser.username;
+updateFriendRequestsUI();
+updateFriendsListUI();
+}
+// Logout functionality
+logoutBtn.addEventListener('click', function() {
+currentUser = null;
+currentChat = null;
+// Only clear current user from storage, keep messages and requests
+localStorage.removeItem('currentUser');
+chatInterface.classList.add('hidden');
+loginScreen.classList.remove('hidden');
+// Clear form
+document.getElementById('username').value = '';
+document.getElementById('password').value = '';
+loginError.classList.add('hidden');
+});
+// Navigation between chat list and detail views
+backToListBtn.addEventListener('click', function() {
+chatDetailView.classList.add('hidden');
+chatListView.classList.remove('hidden');
+currentChat = null;
+});
+// Send message functionality
+sendMessageBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+sendMessage();
+}
+// Simulate "is typing" for the other user
+if (currentChat) {
+// Clear any existing timeout
+clearTimeout(typingTimeout);
+// Set a new timeout
+typingTimeout = setTimeout(() => {
+// Randomly decide if the other user will respond
+if (Math.random() > 0.3) {
+simulateTyping(currentChat);
+}
+}, 1000);
+}
+});
+function sendMessage() {
+const text = messageInput.value.trim();
+if (text && currentChat) {
+const newMessage = {
+id: Date.now(), // Add unique ID for each message
+from: currentUser.username,
+to: currentChat,
+text: text,
+timestamp: new Date(),
+isEdited: false
+};
+messages.push(newMessage);
+saveData();
+messageInput.value = '';
+updateChatMessagesUI();
+// Scroll to bottom
+setTimeout(() => {
+chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}, 100);
+}
+}
+// Message actions (edit/delete)
+function editMessage(messageId) {
+const message = messages.find(m => m.id === messageId);
+if (message) {
+const newText = prompt('Edit message:', message.text);
+if (newText !== null && newText.trim() !== '') {
+message.text = newText.trim();
+message.isEdited = true;
+saveData();
+updateChatMessagesUI();
+}
+}
+}
+function deleteMessage(messageId) {
+if (confirm('Are you sure you want to delete this message?')) {
+const index = messages.findIndex(m => m.id === messageId);
+if (index !== -1) {
+messages.splice(index, 1);
+saveData();
+updateChatMessagesUI();
+}
+}
+}
+// Friend request functionality
+addFriendBtn.addEventListener('click', function() {
+addFriendModal.classList.remove('hidden');
+friendUsername.value = '';
+addFriendError.classList.add('hidden');
+});
+cancelAddFriend.addEventListener('click', function() {
+addFriendModal.classList.add('hidden');
+});
+confirmAddFriend.addEventListener('click', function() {
+const username = friendUsername.value.trim();
+if (!username) {
+addFriendError.textContent = 'Please enter a username';
+addFriendError.classList.remove('hidden');
+return;
+}
+// Check if user exists
+const userExists = users.some(u => u.username === username);
+if (!userExists) {
+addFriendError.textContent = 'User not found';
+addFriendError.classList.remove('hidden');
+return;
+}
+// Check if it's the current user
+if (username === currentUser.username) {
+addFriendError.textContent = 'You cannot add yourself as a friend';
+addFriendError.classList.remove('hidden');
+return;
+}
+// Check if request already exists
+const existingRequest = friendRequests.find(
+req => (req.from === currentUser.username && req.to === username) ||
+(req.from === username && req.to === currentUser.username)
+);
+if (existingRequest) {
+if (existingRequest.status === 'accepted') {
+addFriendError.textContent = 'You are already friends with this user';
+} else if (existingRequest.from === currentUser.username) {
+addFriendError.textContent = 'Friend request already sent';
+} else {
+addFriendError.textContent = 'This user has already sent you a request';
+}
+addFriendError.classList.remove('hidden');
+return;
+}
+// Add new request
+friendRequests.push({
+from: currentUser.username,
+to: username,
+status: 'pending'
+});
+saveData();
+updateFriendRequestsUI();
+addFriendModal.classList.add('hidden');
+showNotification('Friend request sent successfully!');
+});
+// Update UI for friend requests
+function updateFriendRequestsUI() {
+pendingRequestsContainer.innerHTML = '';
+// Get incoming requests
+const incomingRequests = friendRequests.filter(
+req => req.to === currentUser.username && req.status === 'pending'
+);
+// Get outgoing requests
+const outgoingRequests = friendRequests.filter(
+req => req.from === currentUser.username && req.status === 'pending'
+);
+if (incomingRequests.length === 0 && outgoingRequests.length === 0) {
+pendingRequestsContainer.innerHTML = '<div class="text-sm text-gray-500 italic">No pending requests</div>';
+return;
+}
+// Add incoming requests
+incomingRequests.forEach(req => {
+const requestEl = document.createElement('div');
+requestEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+const userInfo = document.createElement('div');
+userInfo.className = 'flex items-center';
+const avatar = document.createElement('div');
+avatar.className = 'w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center';
+avatar.innerHTML = '<i class="ri-user-fill ri-lg text-gray-500"></i>';
+const username = document.createElement('div');
+username.className = 'ml-3';
+const fullName = users.find(u => u.username === req.from)?.fullName || req.from;
+username.innerHTML = `
+<div class="font-medium text-gray-800">${fullName}</div>
+<div class="text-xs text-gray-500">@${req.from}</div>
+`;
+userInfo.appendChild(avatar);
+userInfo.appendChild(username);
+const actions = document.createElement('div');
+actions.className = 'flex space-x-2';
+const acceptBtn = document.createElement('button');
+acceptBtn.className = 'px-3 py-1 bg-primary text-white text-xs rounded-full cursor-pointer';
+acceptBtn.textContent = 'Accept';
+acceptBtn.addEventListener('click', () => acceptFriendRequest(req.from));
+const declineBtn = document.createElement('button');
+declineBtn.className = 'px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full cursor-pointer';
+declineBtn.textContent = 'Decline';
+declineBtn.addEventListener('click', () => declineFriendRequest(req.from));
+actions.appendChild(acceptBtn);
+actions.appendChild(declineBtn);
+requestEl.appendChild(userInfo);
+requestEl.appendChild(actions);
+pendingRequestsContainer.appendChild(requestEl);
+});
+// Add outgoing requests
+outgoingRequests.forEach(req => {
+const requestEl = document.createElement('div');
+requestEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+const userInfo = document.createElement('div');
+userInfo.className = 'flex items-center';
+const avatar = document.createElement('div');
+avatar.className = 'w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center';
+avatar.innerHTML = '<i class="ri-user-fill ri-lg text-gray-500"></i>';
+const username = document.createElement('div');
+username.className = 'ml-3';
+const fullName = users.find(u => u.username === req.to)?.fullName || req.to;
+username.innerHTML = `
+<div class="font-medium text-gray-800">${fullName}</div>
+<div class="text-xs text-gray-500">@${req.to}</div>
+`;
+userInfo.appendChild(avatar);
+userInfo.appendChild(username);
+const status = document.createElement('div');
+status.className = 'text-xs text-gray-500 bg-gray-200 px-3 py-1 rounded-full';
+status.textContent = 'Pending';
+requestEl.appendChild(userInfo);
+requestEl.appendChild(status);
+pendingRequestsContainer.appendChild(requestEl);
+});
+}
+// Accept friend request
+function acceptFriendRequest(fromUsername) {
+const requestIndex = friendRequests.findIndex(
+req => req.from === fromUsername && req.to === currentUser.username && req.status === 'pending'
+);
+if (requestIndex !== -1) {
+friendRequests[requestIndex].status = 'accepted';
+// Add initial message
+const welcomeMessage = {
+id: Date.now(),
+from: fromUsername,
+to: currentUser.username,
+text: "Hi! Thanks for accepting my friend request! 👋",
+timestamp: new Date(),
+isEdited: false
+};
+messages.push(welcomeMessage);
+saveData();
+updateFriendRequestsUI();
+updateFriendsListUI();
+showNotification('Friend request accepted!');
+}
+}
+// Decline friend request
+function declineFriendRequest(fromUsername) {
+const requestIndex = friendRequests.findIndex(
+req => req.from === fromUsername && req.to === currentUser.username && req.status === 'pending'
+);
+if (requestIndex !== -1) {
+friendRequests[requestIndex].status = 'declined';
+saveData();
+updateFriendRequestsUI();
+showNotification('Friend request declined');
+}
+}
+// Update friends list UI
+function updateFriendsListUI() {
+friendsListContainer.innerHTML = '';
+// Get accepted friend requests
+const acceptedRequests = friendRequests.filter(
+req => (req.from === currentUser.username || req.to === currentUser.username) &&
+req.status === 'accepted'
+);
+if (acceptedRequests.length === 0) {
+friendsListContainer.innerHTML = '<div class="text-sm text-gray-500 italic">No friends yet. Add some friends to start chatting!</div>';
+return;
+}
+// Get list of friend usernames
+const friendUsernames = acceptedRequests.map(req =>
+req.from === currentUser.username ? req.to : req.from
+);
+// Create friend elements
+friendUsernames.forEach(username => {
+const friendEl = document.createElement('div');
+friendEl.className = 'flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer';
+friendEl.addEventListener('click', () => openChat(username));
+const avatar = document.createElement('div');
+avatar.className = 'w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center';
+avatar.innerHTML = '<i class="ri-user-fill ri-lg text-gray-500"></i>';
+const info = document.createElement('div');
+info.className = 'ml-3 flex-1';
+const fullName = users.find(u => u.username === username)?.fullName || username;
+// Get last message between users
+const userMessages = messages.filter(
+msg => (msg.from === currentUser.username && msg.to === username) ||
+(msg.from === username && msg.to === currentUser.username)
+);
+const lastMessage = userMessages.length > 0 ?
+userMessages.sort((a, b) => b.timestamp - a.timestamp)[0] : null;
+const lastMessageText = lastMessage ?
+(lastMessage.text.length > 25 ? lastMessage.text.substring(0, 25) + '...' : lastMessage.text) :
+'No messages yet';
+const lastMessageTime = lastMessage ?
+formatMessageTime(lastMessage.timestamp) : '';
+info.innerHTML = `
+<div class="flex justify-between">
+<div class="font-medium text-gray-800">${fullName}</div>
+<div class="text-xs text-gray-500">${lastMessageTime}</div>
+</div>
+<div class="text-sm text-gray-500">${lastMessageText}</div>
+`;
+friendEl.appendChild(avatar);
+friendEl.appendChild(info);
+// Add unread message indicator if last message is from friend and unread
+if (lastMessage && lastMessage.from === username) {
+const unreadIndicator = document.createElement('div');
+unreadIndicator.className = 'w-3 h-3 rounded-full bg-primary';
+friendEl.appendChild(unreadIndicator);
+}
+friendsListContainer.appendChild(friendEl);
+});
+}
+// Open chat with a friend
+function openChat(username) {
+currentChat = username;
+// Update UI
+chatListView.classList.add('hidden');
+chatDetailView.classList.remove('hidden');
+// Set friend name
+const fullName = users.find(u => u.username === username)?.fullName || username;
+chatFriendName.textContent = fullName;
+// Update messages
+updateChatMessagesUI();
+// Scroll to bottom
+setTimeout(() => {
+chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}, 100);
+}
+// Update chat messages UI
+function updateChatMessagesUI() {
+if (!currentChat) return;
+chatMessagesContainer.innerHTML = '';
+// Get messages between current user and friend
+const chatMessages = messages.filter(
+msg => (msg.from === currentUser.username && msg.to === currentChat) ||
+(msg.from === currentChat && msg.to === currentUser.username)
+).sort((a, b) => a.timestamp - b.timestamp);
+if (chatMessages.length === 0) {
+const emptyState = document.createElement('div');
+emptyState.className = 'text-center py-8';
+emptyState.innerHTML = `
+<div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+<i class="ri-chat-3-line ri-2x text-gray-400"></i>
+</div>
+<p class="mt-4 text-gray-500">No messages yet</p>
+<p class="text-sm text-gray-400">Send a message to start the conversation</p>
+`;
+chatMessagesContainer.appendChild(emptyState);
+return;
+}
+// Group messages by date
+let currentDate = null;
+chatMessages.forEach(msg => {
+const messageDate = new Date(msg.timestamp).toDateString();
+// Add date separator if needed
+if (messageDate !== currentDate) {
+currentDate = messageDate;
+const dateSeparator = document.createElement('div');
+dateSeparator.className = 'flex items-center justify-center my-4';
+const dateText = document.createElement('span');
+dateText.className = 'text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full';
+dateText.textContent = formatDate(msg.timestamp);
+dateSeparator.appendChild(dateText);
+chatMessagesContainer.appendChild(dateSeparator);
+}
+// Create message element
+const messageEl = document.createElement('div');
+messageEl.className = 'flex mb-4';
+const isSent = msg.from === currentUser.username;
+if (isSent) {
+messageEl.className += ' justify-end';
+}
+const messageBubble = document.createElement('div');
+messageBubble.className = `message-bubble p-3 relative group ${isSent ? 'sent' : 'received'}`;
+const messageContent = document.createElement('div');
+messageContent.className = 'flex items-center whitespace-pre-line';
+messageContent.textContent = msg.text;
+if (msg.isEdited) {
+const editedMark = document.createElement('span');
+editedMark.className = 'text-xs opacity-70 ml-2';
+editedMark.textContent = '(edited)';
+messageContent.appendChild(editedMark);
+}
+if (isSent) {
+const actionButtons = document.createElement('div');
+actionButtons.className = 'absolute right-0 -top-8 hidden group-hover:flex bg-white rounded-lg shadow-md';
+const editBtn = document.createElement('button');
+editBtn.className = 'p-2 hover:bg-gray-100 rounded-l-lg';
+editBtn.innerHTML = '<i class="ri-edit-line text-gray-600"></i>';
+editBtn.onclick = (e) => {
+e.stopPropagation();
+editMessage(msg.id);
+};
+const deleteBtn = document.createElement('button');
+deleteBtn.className = 'p-2 hover:bg-gray-100 rounded-r-lg';
+deleteBtn.innerHTML = '<i class="ri-delete-bin-line text-gray-600"></i>';
+deleteBtn.onclick = (e) => {
+e.stopPropagation();
+deleteMessage(msg.id);
+};
+actionButtons.appendChild(editBtn);
+actionButtons.appendChild(deleteBtn);
+messageBubble.appendChild(actionButtons);
+}
+messageBubble.appendChild(messageContent);
+const timeEl = document.createElement('div');
+timeEl.className = `text-xs ${isSent ? 'text-gray-400 text-right mr-1' : 'text-gray-500 ml-1'}`;
+timeEl.textContent = formatMessageTime(msg.timestamp);
+const messageContainer = document.createElement('div');
+if (isSent) {
+messageContainer.appendChild(timeEl);
+messageContainer.appendChild(messageBubble);
+} else {
+messageContainer.appendChild(messageBubble);
+messageContainer.appendChild(timeEl);
+}
+messageEl.appendChild(messageContainer);
+chatMessagesContainer.appendChild(messageEl);
+});
+}
+// Format date for message groups
+function formatDate(date) {
+const now = new Date();
+const messageDate = new Date(date);
+// Check if it's today
+if (messageDate.toDateString() === now.toDateString()) {
+return 'Today';
+}
+// Check if it's yesterday
+const yesterday = new Date(now);
+yesterday.setDate(now.getDate() - 1);
+if (messageDate.toDateString() === yesterday.toDateString()) {
+return 'Yesterday';
+}
+// Otherwise return formatted date
+const options = { month: 'short', day: 'numeric', year: messageDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined };
+return messageDate.toLocaleDateString('en-US', options);
+}
+// Format time for messages
+function formatMessageTime(date) {
+const messageDate = new Date(date);
+return messageDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+}
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+loadSavedData();
+// Profile Modal
+const profileModal = document.getElementById('profileModal');
+const profileBtn = document.getElementById('profileBtn');
+const closeProfileModal = document.getElementById('closeProfileModal');
+const profilePicContainer = document.getElementById('profilePicContainer');
+const profilePicInput = document.getElementById('profilePicInput');
+const nicknameInput = document.getElementById('nicknameInput');
+const saveProfileChanges = document.getElementById('saveProfileChanges');
+const cancelProfileChanges = document.getElementById('cancelProfileChanges');
+// Settings Modal
+const settingsModal = document.getElementById('settingsModal');
+const settingsBtn = document.getElementById('settingsBtn');
+const closeSettingsModal = document.getElementById('closeSettingsModal');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const soundToggle = document.getElementById('soundToggle');
+// Notifications Modal
+const notificationsModal = document.getElementById('notificationsModal');
+const notificationsBtn = document.getElementById('notificationsBtn');
+const closeNotificationsModal = document.getElementById('closeNotificationsModal');
+const messageNotifToggle = document.getElementById('messageNotifToggle');
+const friendRequestNotifToggle = document.getElementById('friendRequestNotifToggle');
+// Profile Modal Functions
+profileBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  nicknameInput.value = currentUser.fullName || '';
+  profileModal.classList.remove('hidden');
+  menuDropdown.classList.add('hidden');
+});
+closeProfileModal.addEventListener('click', () => {
+  profileModal.classList.add('hidden');
+});
+profilePicContainer.addEventListener('click', () => {
+  profilePicInput.click();
+});
+profilePicInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      currentUser.profilePic = e.target.result;
+      saveData();
+      showNotification('Profile picture updated!');
+    };
+    reader.readAsDataURL(file);
+  }
+});
+saveProfileChanges.addEventListener('click', () => {
+  const newNickname = nicknameInput.value.trim();
+  if (newNickname) {
+    currentUser.fullName = newNickname;
+    saveData();
+    updateFriendsListUI();
+    showNotification('Profile updated successfully!');
+    profileModal.classList.add('hidden');
+  }
+});
+cancelProfileChanges.addEventListener('click', () => {
+  profileModal.classList.add('hidden');
+});
+// Settings Modal Functions
+settingsBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  settingsModal.classList.remove('hidden');
+  menuDropdown.classList.add('hidden');
+});
+closeSettingsModal.addEventListener('click', () => {
+  settingsModal.classList.add('hidden');
+});
+darkModeToggle.addEventListener('change', () => {
+  // Implement dark mode logic here
+  showNotification('Dark mode setting saved!');
+});
+soundToggle.addEventListener('change', () => {
+  // Implement sound effects logic here
+  showNotification('Sound effects setting saved!');
+});
+// Notifications Modal Functions
+notificationsBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  notificationsModal.classList.remove('hidden');
+  menuDropdown.classList.add('hidden');
+});
+closeNotificationsModal.addEventListener('click', () => {
+  notificationsModal.classList.add('hidden');
+});
+messageNotifToggle.addEventListener('change', () => {
+  // Implement message notifications logic here
+  showNotification('Message notifications setting saved!');
+});
+friendRequestNotifToggle.addEventListener('change', () => {
+  // Implement friend request notifications logic here
+  showNotification('Friend request notifications setting saved!');
+});
+// Close modals when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target === profileModal) {
+    profileModal.classList.add('hidden');
+  }
+  if (e.target === settingsModal) {
+    settingsModal.classList.add('hidden');
+  }
+  if (e.target === notificationsModal) {
+    notificationsModal.classList.add('hidden');
+  }
+});
+// Menu dropdown functionality
+const menuBtn = document.getElementById('menuBtn');
+const menuDropdown = document.getElementById('menuDropdown');
+let isMenuOpen = false;
+menuBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+isMenuOpen = !isMenuOpen;
+menuDropdown.classList.toggle('hidden', !isMenuOpen);
+});
+document.addEventListener('click', (e) => {
+if (isMenuOpen && !menuDropdown.contains(e.target)) {
+isMenuOpen = false;
+menuDropdown.classList.add('hidden');
+}
+});
+menuDropdown.addEventListener('click', (e) => {
+const action = e.target.closest('a');
+if (action) {
+e.preventDefault();
+if (action.textContent.trim() === 'Logout') {
+logoutBtn.click();
+}
+isMenuOpen = false;
+menuDropdown.classList.add('hidden');
+}
+});
+// Update UI after loading data
+if (currentUser) {
+updateFriendRequestsUI();
+updateFriendsListUI();
+}
+// Add click-to-copy functionality for test credentials
+const credentialTexts = document.querySelectorAll('.bg-blue-50 p');
+credentialTexts.forEach(text => {
+text.style.cursor = 'pointer';
+text.addEventListener('click', function() {
+const textToCopy = this.textContent;
+navigator.clipboard.writeText(textToCopy).then(() => {
+showNotification('Credentials copied to clipboard!');
+});
+});
+});
+// Add some sample data if none exists
+if (friendRequests.length === 0 && messages.length === 0) {
+// Add some sample friend requests
+friendRequests = [
+{ from: 'emma', to: 'john', status: 'accepted' },
+{ from: 'sarah', to: 'john', status: 'pending' },
+{ from: 'john', to: 'mike', status: 'pending' }
+];
+// Add some sample messages
+const now = new Date();
+messages = [
+{ from: 'emma', to: 'john', text: 'Hey John, how are you doing?', timestamp: new Date(now.getTime() - 86400000) },
+{ from: 'john', to: 'emma', text: 'Hi Emma! I\'m doing great, thanks for asking!', timestamp: new Date(now.getTime() - 86300000) },
+{ from: 'emma', to: 'john', text: 'Glad to hear that! Do you want to grab coffee tomorrow?', timestamp: new Date(now.getTime() - 86000000) },
+{ from: 'john', to: 'emma', text: 'That sounds great! How about 10am at the usual place?', timestamp: new Date(now.getTime() - 85000000) },
+{ from: 'emma', to: 'john', text: 'Perfect! See you then! 😊', timestamp: new Date(now.getTime() - 84000000) }
+];
+saveData();
+}
+});
+// Close modal when clicking outside
+window.addEventListener('click', function(e) {
+if (e.target === addFriendModal) {
+addFriendModal.classList.add('hidden');
+}
+});
+</script>
+</body>
+</html>
